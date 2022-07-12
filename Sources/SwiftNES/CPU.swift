@@ -13,7 +13,7 @@ private extension OptionSet {
     }
 }
 
-struct CPU {
+public struct CPU {
     /// # Status Register (P) http://wiki.nesdev.com/w/index.php/Status_flags
     ///
     ///  7 6 5 4 3 2 1 0
@@ -48,7 +48,7 @@ struct CPU {
 
     var memory: [UInt8]
 
-    init() {
+    public init() {
         registerA = 0
         registerX = 0
         registerY = 0
@@ -58,13 +58,13 @@ struct CPU {
         memory = .init(repeating: 0, count: 0xFFFF)
     }
 
-    mutating func start(program: [UInt8]) {
+    public mutating func start(program: [UInt8]) {
         load(program: program)
         reset()
         run()
     }
 
-    mutating func reset() {
+    public mutating func reset() {
         registerA = 0
         registerX = 0
         status = CPUFlags(rawValue: 0b100100)
@@ -73,15 +73,21 @@ struct CPU {
         programCounter = mem_read_16(0xFFFC)
     }
 
-    mutating func load(program: [UInt8]) {
+    public mutating func load(program: [UInt8]) {
         memory.replaceSubrange(0x8000..<(0x8000 + program.count), with: program)
         mem_write_16(0x8000, at: 0xFFFC)
     }
 
-    mutating func run() {
+    public mutating func run() {
+        run({ _ in })
+    }
+
+    public mutating func run(_ callback: (inout CPU) -> Void) {
         let opcodes = OpCode.codes
 
         while true {
+            callback(&self)
+
             let code = mem_read(programCounter)
             programCounter += 1
 
