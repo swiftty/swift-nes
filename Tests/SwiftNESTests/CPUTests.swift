@@ -15,4 +15,11 @@ class CPUTests: XCTestCase {
         cpu.interpret(program: [0xa9, 0x00, 0x00])
         XCTAssertEqual(cpu.status & 0b0000_0010, 0b10)
     }
+
+    func test_0xaa_tax_move_a_to_x() {
+        var cpu = CPU()
+        cpu.registerA = 10
+        cpu.interpret(program: [0xaa, 0x00])
+        XCTAssertEqual(cpu.registerX, 10)
+    }
 }
