@@ -3,6 +3,7 @@ import Foundation
 struct CPU {
     var registerA: UInt8
     var registerX: UInt8
+    var registerY: UInt8
     var status: UInt8
     var programCounter: UInt16
 
@@ -11,6 +12,7 @@ struct CPU {
     init() {
         registerA = 0
         registerX = 0
+        registerY = 0
         status = 0
         programCounter = 0
         memory = .init(repeating: 0, count: 0xFFFF)
@@ -66,9 +68,16 @@ struct CPU {
                 return
 
             case 0xA9:
-                let param = mem_read(programCounter)
+                lda(.immediate)
                 programCounter += 1
-                lda(param)
+
+            case 0xA5:
+                lda(.zeroPage)
+                programCounter += 1
+
+            case 0xAD:
+                lda(.absolute)
+                programCounter += 2
 
             case 0xAA:
                 tax()
@@ -82,7 +91,10 @@ struct CPU {
         }
     }
 
-    mutating func lda(_ value: UInt8) {
+    mutating func lda(_ mode: AddressingMode) {
+        let addr = operand_address(mode)
+        let value = mem_read(addr)
+
         registerA = value
         updateZeroAndNegativeFlags(registerA)
     }

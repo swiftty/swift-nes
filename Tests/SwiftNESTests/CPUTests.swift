@@ -33,4 +33,11 @@ class CPUTests: XCTestCase {
         cpu.start(program: [0xa9, 0xff, 0xaa,0xe8, 0xe8, 0x00])
         XCTAssertEqual(cpu.registerX, 1)
     }
+
+    func test_lda_from_memory() {
+        var cpu = CPU()
+        cpu.mem_write(0x55, at: 0x10)
+        cpu.start(program: [0xa5, 0x10, 0x00])
+        XCTAssertEqual(cpu.registerA, 0x55)
+    }
 }
