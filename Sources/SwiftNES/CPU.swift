@@ -68,20 +68,20 @@ struct CPU {
             let currentState = programCounter
             let opcode = opcodes[code]!
 
-            switch code {
-            case 0x00:
+            switch opcode.mnemonic {
+            case .BRK:
                 return
 
-            case 0xa9, 0xa5, 0xb5, 0xad, 0xbd, 0xb9, 0xa1, 0xb1:
+            case .LDA:
                 lda(opcode.mode)
 
-            case 0x85, 0x95, 0x8d, 0x9d, 0x99, 0x81, 0x91:
+            case .STA:
                 sta(opcode.mode)
 
-            case 0xaa:
+            case .TAX:
                 tax()
 
-            case 0xe8:
+            case .INX:
                 inx()
 
             default:
