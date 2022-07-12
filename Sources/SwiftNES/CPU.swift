@@ -59,34 +59,37 @@ struct CPU {
     }
 
     mutating func run() {
+        let opcodes = OpCode.codes
+
         while true {
-            let opscode = mem_read(programCounter)
+            let code = mem_read(programCounter)
             programCounter += 1
 
-            switch opscode {
+            let currentState = programCounter
+            let opcode = opcodes[code]!
+
+            switch code {
             case 0x00:
                 return
 
-            case 0xA9:
-                lda(.immediate)
-                programCounter += 1
+            case 0xa9, 0xa5, 0xb5, 0xad, 0xbd, 0xb9, 0xa1, 0xb1:
+                lda(opcode.mode)
 
-            case 0xA5:
-                lda(.zeroPage)
-                programCounter += 1
+            case 0x85, 0x95, 0x8d, 0x9d, 0x99, 0x81, 0x91:
+                sta(opcode.mode)
 
-            case 0xAD:
-                lda(.absolute)
-                programCounter += 2
-
-            case 0xAA:
+            case 0xaa:
                 tax()
 
-            case 0xE8:
+            case 0xe8:
                 inx()
 
             default:
                 fatalError()
+            }
+
+            if currentState == programCounter {
+                programCounter += opcode.count - 1
             }
         }
     }
@@ -97,6 +100,11 @@ struct CPU {
 
         registerA = value
         updateZeroAndNegativeFlags(registerA)
+    }
+
+    mutating func sta(_ mode: AddressingMode) {
+        let addr = operand_address(mode)
+        mem_write(registerA, at: addr)
     }
 
     mutating func tax() {
