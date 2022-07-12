@@ -30,38 +30,38 @@ struct CPU {
             case 0xA9:
                 let param = program[pc]
                 programCounter += 1
-                registerA = param
-
-                if registerA == 0 {
-                    status = status | 0b0000_0010
-                } else {
-                    status = status & 0b1111_1101
-                }
-
-                if registerA & 0b1000_0000 != 0 {
-                    status = status | 0b1000_0000
-                } else {
-                    status = status & 0b0111_1111
-                }
+                lda(param)
 
             case 0xAA:
-                registerX = registerA
-
-                if registerX == 0 {
-                    status = status | 0b0000_0010
-                } else {
-                    status = status & 0b1111_1101
-                }
-
-                if registerX & 0b1000_0000 != 0 {
-                    status = status | 0b1000_0000
-                } else {
-                    status = status & 0b0111_1111
-                }
+                tax()
 
             default:
                 fatalError()
             }
+        }
+    }
+
+    mutating func lda(_ value: UInt8) {
+        registerA = value
+        updateZeroAndNegativeFlags(registerA)
+    }
+
+    mutating func tax() {
+        registerX = registerA
+        updateZeroAndNegativeFlags(registerX)
+    }
+
+    private mutating func updateZeroAndNegativeFlags(_ result: UInt8) {
+        if result == 0 {
+            status = status | 0b0000_0010
+        } else {
+            status = status & 0b1111_1101
+        }
+
+        if result & 0b1000_0000 != 0 {
+            status = status | 0b1000_0000
+        } else {
+            status = status & 0b0111_1111
         }
     }
 }
