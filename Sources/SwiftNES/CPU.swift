@@ -1,10 +1,35 @@
 import Foundation
 
 struct CPU {
+    /// # Status Register (P) http://wiki.nesdev.com/w/index.php/Status_flags
+    ///
+    ///  7 6 5 4 3 2 1 0
+    ///  N V   B D I Z C
+    ///  ┃ ┃   ┃ ┃ ┃ ┃ ┗━ Carry Flag
+    ///  ┃ ┃   ┃ ┃ ┃ ┗━━━ Zero Flag
+    ///  ┃ ┃   ┃ ┃ ┗━━━━━ Interrupt Disable
+    ///  ┃ ┃   ┃ ┗━━━━━━━ Decimal Mode (not used on NES)
+    ///  ┃ ┃   ┗━━━━━━━━━ Break Command
+    ///  ┃ ┗━━━━━━━━━━━━━ Overflow Flag
+    ///  ┗━━━━━━━━━━━━━━━ Negative Flag
+    ///
+    struct CPUFlags: OptionSet {
+        var rawValue: UInt8
+
+        static let CARRY             = Self.init(rawValue: 0b0000_0001)
+        static let ZERO              = Self.init(rawValue: 0b0000_0010)
+        static let INTERRUPT_DISABLE = Self.init(rawValue: 0b0000_0100)
+        static let DECIMAL_MODE      = Self.init(rawValue: 0b0000_1000)
+        static let BREAK             = Self.init(rawValue: 0b0001_0000)
+        static let BREAK2            = Self.init(rawValue: 0b0010_0000)
+        static let OVERFLOW          = Self.init(rawValue: 0b0100_0000)
+        static let NEGATIV           = Self.init(rawValue: 0b1000_0000)
+    }
+
     var registerA: UInt8
     var registerX: UInt8
     var registerY: UInt8
-    var status: UInt8
+    var status: CPUFlags
     var programCounter: UInt16
 
     var memory: [UInt8]
@@ -13,7 +38,7 @@ struct CPU {
         registerA = 0
         registerX = 0
         registerY = 0
-        status = 0
+        status = CPUFlags(rawValue: 0b100100)
         programCounter = 0
         memory = .init(repeating: 0, count: 0xFFFF)
     }
@@ -48,7 +73,7 @@ struct CPU {
     mutating func reset() {
         registerA = 0
         registerX = 0
-        status = 0
+        status = CPUFlags(rawValue: 0b100100)
 
         programCounter = mem_read_16(0xFFFC)
     }
@@ -119,15 +144,15 @@ struct CPU {
 
     private mutating func updateZeroAndNegativeFlags(_ result: UInt8) {
         if result == 0 {
-            status = status | 0b0000_0010
+            status.insert(.ZERO)
         } else {
-            status = status & 0b1111_1101
+            status.remove(.ZERO)
         }
 
         if result & 0b1000_0000 != 0 {
-            status = status | 0b1000_0000
+            status.insert(.NEGATIV)
         } else {
-            status = status & 0b0111_1111
+            status.remove(.NEGATIV)
         }
     }
 }
