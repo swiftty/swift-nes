@@ -22,4 +22,17 @@ class CPUTests: XCTestCase {
         cpu.interpret(program: [0xaa, 0x00])
         XCTAssertEqual(cpu.registerX, 10)
     }
+
+    func test_5_ops_working_together() {
+        var cpu = CPU()
+        cpu.interpret(program: [0xa9, 0xc0, 0xaa, 0xe8, 0x00])
+        XCTAssertEqual(cpu.registerX, 0xc1)
+    }
+
+    func test_inx_overflow() {
+        var cpu = CPU()
+        cpu.registerX = 0xff
+        cpu.interpret(program: [0xe8, 0xe8, 0x00])
+        XCTAssertEqual(cpu.registerX, 1)
+    }
 }

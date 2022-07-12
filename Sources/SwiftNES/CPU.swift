@@ -35,6 +35,9 @@ struct CPU {
             case 0xAA:
                 tax()
 
+            case 0xE8:
+                inx()
+
             default:
                 fatalError()
             }
@@ -48,6 +51,11 @@ struct CPU {
 
     mutating func tax() {
         registerX = registerA
+        updateZeroAndNegativeFlags(registerX)
+    }
+
+    mutating func inx() {
+        registerX &+= 1
         updateZeroAndNegativeFlags(registerX)
     }
 
