@@ -2,9 +2,6 @@ import Foundation
 
 extension CPU {
     struct OpCode {
-        struct Mnemonic: RawRepresentable, Equatable {
-            var rawValue: UInt8
-        }
 //        var code: UInt8
         var mnemonic: Mnemonic
         var count: UInt16
@@ -13,65 +10,65 @@ extension CPU {
     }
 }
 
-extension CPU.OpCode.Mnemonic {
-    static let BRK = Self.init(rawValue: 0x00)
-    static let NOP = Self.init(rawValue: 0x01)
-    static let ADC = Self.init(rawValue: 0x02)
-    static let SBC = Self.init(rawValue: 0x03)
-    static let AND = Self.init(rawValue: 0x04)
-    static let EOR = Self.init(rawValue: 0x05)
-    static let ORA = Self.init(rawValue: 0x06)
-    static let ASL = Self.init(rawValue: 0x07)
-    static let LSR = Self.init(rawValue: 0x08)
-    static let ROL = Self.init(rawValue: 0x09)
-    static let ROR = Self.init(rawValue: 0x0a)
-    static let INC = Self.init(rawValue: 0x0b)
-    static let INX = Self.init(rawValue: 0x0c)
-    static let INY = Self.init(rawValue: 0x0d)
-    static let DEC = Self.init(rawValue: 0x0e)
-    static let DEX = Self.init(rawValue: 0x0f)
-    static let DEY = Self.init(rawValue: 0x10)
-    static let CMP = Self.init(rawValue: 0x11)
-    static let CPY = Self.init(rawValue: 0x12)
-    static let CPX = Self.init(rawValue: 0x13)
-    static let JMP = Self.init(rawValue: 0x14)
-    static let JSR = Self.init(rawValue: 0x15)
-    static let RTS = Self.init(rawValue: 0x16)
-    static let RTI = Self.init(rawValue: 0x17)
-
-    static let BCS = Self.init(rawValue: 0x1d)
-    static let BCC = Self.init(rawValue: 0x1e)
-    static let BEQ = Self.init(rawValue: 0x1c)
-    static let BNE = Self.init(rawValue: 0x18)
-    static let BVS = Self.init(rawValue: 0x19)
-    static let BVC = Self.init(rawValue: 0x1a)
-    static let BMI = Self.init(rawValue: 0x1b)
-    static let BPL = Self.init(rawValue: 0x1f)
-
-    static let BIT = Self.init(rawValue: 0x20)
-    static let LDA = Self.init(rawValue: 0x21)
-    static let LDX = Self.init(rawValue: 0x22)
-    static let LDY = Self.init(rawValue: 0x23)
-    static let STA = Self.init(rawValue: 0x24)
-    static let STX = Self.init(rawValue: 0x25)
-    static let STY = Self.init(rawValue: 0x26)
-    static let CLD = Self.init(rawValue: 0x27)
-    static let CLI = Self.init(rawValue: 0x28)
-    static let CLV = Self.init(rawValue: 0x29)
-    static let CLC = Self.init(rawValue: 0x2a)
-    static let SEC = Self.init(rawValue: 0x2b)
-    static let SEI = Self.init(rawValue: 0x2c)
-    static let SED = Self.init(rawValue: 0x2d)
-    static let TAX = Self.init(rawValue: 0x2e)
-    static let TAY = Self.init(rawValue: 0x2f)
-    static let TSX = Self.init(rawValue: 0x30)
-    static let TXA = Self.init(rawValue: 0x31)
-    static let TXS = Self.init(rawValue: 0x32)
-    static let TYA = Self.init(rawValue: 0x33)
-    static let PHA = Self.init(rawValue: 0x34)
-    static let PLA = Self.init(rawValue: 0x35)
-    static let PHP = Self.init(rawValue: 0x36)
-    static let PLP = Self.init(rawValue: 0x37)
+extension CPU.OpCode {
+    enum Mnemonic: Equatable {
+        case BRK
+        case NOP
+        case ADC
+        case SBC
+        case AND
+        case EOR
+        case ORA
+        case ASL
+        case LSR
+        case ROL
+        case ROR
+        case INC
+        case INX
+        case INY
+        case DEC
+        case DEX
+        case DEY
+        case CMP
+        case CPY
+        case CPX
+        case JMP
+        case JSR
+        case RTS
+        case RTI
+        case BCS
+        case BCC
+        case BEQ
+        case BNE
+        case BVS
+        case BVC
+        case BMI
+        case BPL
+        case BIT
+        case LDA
+        case LDX
+        case LDY
+        case STA
+        case STX
+        case STY
+        case CLD
+        case CLI
+        case CLV
+        case CLC
+        case SEC
+        case SEI
+        case SED
+        case TAX
+        case TAY
+        case TSX
+        case TXA
+        case TXS
+        case TYA
+        case PHA
+        case PLA
+        case PHP
+        case PLP
+    }
 }
 
 extension CPU.OpCode {
