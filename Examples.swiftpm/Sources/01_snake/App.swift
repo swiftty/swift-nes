@@ -7,18 +7,49 @@ struct MyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Canvas { context, size in
-                let xUnit = Int(size.width / 10)
-                let yUnit = Int(size.height / 10)
-                for y in 0..<yUnit {
-                    for x in 0..<xUnit {
-                        let (r, g, b) = runner.canvas[x + y * yUnit]
-                        context.fill(Path(.init(x: x * 10, y: y * 10, width: 10, height: 10)),
-                                     with: .color(red: Double(r), green: Double(g), blue: Double(b)))
+            VStack {
+                Canvas { context, size in
+                    let xUnit = Int(size.width / 10)
+                    let yUnit = Int(size.height / 10)
+                    for y in 0..<yUnit {
+                        for x in 0..<xUnit {
+                            let (r, g, b) = runner.canvas[x + y * yUnit]
+                            context.fill(Path(.init(x: x * 10, y: y * 10, width: 10, height: 10)),
+                                         with: .color(red: Double(r), green: Double(g), blue: Double(b)))
+                        }
                     }
                 }
+                .frame(width: 320, height: 320)
+
+                Spacer(minLength: 40)
+
+                VStack(spacing: 24) {
+                    Button(action: runner.keyUp) {
+                        Image(systemName: "arrow.up.square")
+                    }
+                    .keyboardShortcut(.upArrow, modifiers: [])
+
+                    HStack(spacing: 96) {
+                        Button(action: runner.keyLeft) {
+                            Image(systemName: "arrow.left.square")
+                        }
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+
+                        Button(action: runner.keyRight) {
+                            Image(systemName: "arrow.right.square")
+                        }
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                    }
+
+                    Button(action: runner.keyDown) {
+                        Image(systemName: "arrow.down.square")
+                    }
+                    .keyboardShortcut(.downArrow, modifiers: [])
+                }
+                .font(.system(size: 60))
+
+                Spacer()
             }
-            .frame(width: 320, height: 320)
             .onAppear {
                 runner.run()
             }
@@ -31,32 +62,69 @@ typealias RGB = (r: UInt8, g: UInt8, b: UInt8)
 class CPURunner: ObservableObject {
     @Published var canvas: [RGB] = [RGB].init(repeating: (0, 0, 0), count: 32 * 32)
 
+    private enum Direction {
+        case up, down, left, right
+    }
     private var cpu = CPU()
+    private var direction: Direction?
+    private let sync = DispatchQueue(label: "keycontrol")
 
     init() {
         cpu.load(program: program)
         cpu.reset()
     }
 
+    func keyUp() {
+        sync.async {
+            self.direction = .up
+        }
+    }
+
+    func keyDown() {
+        sync.async {
+            self.direction = .down
+        }
+    }
+
+    func keyLeft() {
+        sync.async {
+            self.direction = .left
+        }
+    }
+
+    func keyRight() {
+        sync.async {
+            self.direction = .right
+        }
+    }
+
     func run() {
         var frame = canvas
+        var key = direction
         DispatchQueue.global().async {
             self.cpu.run { cpu in
-                switch (0..<4).randomElement() {
-                case 0:  // up
-                    cpu.mem_write(0x77, at: 0xff)
+                var direction: Direction?
+                self.sync.sync {
+                    direction = self.direction
+                }
+                if direction != key {
+                    key = direction
+                    switch key {
+                    case .up:
+                        cpu.mem_write(0x77, at: 0xff)
 
-                case 1:  // down
-                    cpu.mem_write(0x73, at: 0xff)
+                    case .down:
+                        cpu.mem_write(0x73, at: 0xff)
 
-                case 2:  // left
-                    cpu.mem_write(0x61, at: 0xff)
+                    case .left:
+                        cpu.mem_write(0x61, at: 0xff)
 
-                case 3:  // right
-                    cpu.mem_write(0x64, at: 0xff)
+                    case .right:
+                        cpu.mem_write(0x64, at: 0xff)
 
-                default:
-                    break
+                    default:
+                        break
+                    }
                 }
 
                 cpu.mem_write((1..<16).randomElement()!, at: 0xfe)
