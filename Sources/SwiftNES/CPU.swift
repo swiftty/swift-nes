@@ -74,8 +74,8 @@ public struct CPU {
     }
 
     public mutating func load(program: [UInt8]) {
-        memory.replaceSubrange(0x8000..<(0x8000 + program.count), with: program)
-        mem_write_16(0x8000, at: 0xFFFC)
+        memory.replaceSubrange(0x0600..<(0x0600 + program.count), with: program)
+        mem_write_16(0x0600, at: 0xFFFC)
     }
 
     public mutating func run() {
@@ -86,8 +86,6 @@ public struct CPU {
         let opcodes = OpCode.codes
 
         while true {
-            callback(&self)
-
             let code = mem_read(programCounter)
             programCounter += 1
 
@@ -306,26 +304,28 @@ public struct CPU {
             if currentState == programCounter {
                 programCounter += opcode.count - 1
             }
+
+            callback(&self)
         }
     }
 }
 
 extension CPU {
-    func mem_read(_ addr: UInt16) -> UInt8 {
+    public func mem_read(_ addr: UInt16) -> UInt8 {
         memory[Int(addr)]
     }
 
-    func mem_read_16(_ addr: UInt16) -> UInt16 {
+    public func mem_read_16(_ addr: UInt16) -> UInt16 {
         let lo = UInt16(mem_read(addr))
         let hi = UInt16(mem_read(addr + 1))
         return (hi << 8) | lo
     }
 
-    mutating func mem_write(_ value: UInt8, at addr: UInt16) {
+    public mutating func mem_write(_ value: UInt8, at addr: UInt16) {
         memory[Int(addr)] = value
     }
 
-    mutating func mem_write_16(_ value: UInt16, at addr: UInt16) {
+    public mutating func mem_write_16(_ value: UInt16, at addr: UInt16) {
         let hi = UInt8(value >> 8)
         let lo = UInt8(value & 0xFF)
         mem_write(lo, at: addr)
@@ -666,8 +666,8 @@ extension CPU {
 
     private mutating func branch(_ condition: Bool) {
         guard condition else { return }
-        let jump = Int8(mem_read(programCounter))
-        let addr = programCounter &+ 1 &+ UInt16(jump)
+        let jump = Int8(truncatingIfNeeded: mem_read(programCounter))
+        let addr = programCounter &+ 1 &+ UInt16(truncatingIfNeeded: jump)
 
         programCounter = addr
     }
