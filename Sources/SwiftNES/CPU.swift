@@ -546,7 +546,7 @@ extension CPU {
         let addr = operand_address(mode)
         let value = mem_read(addr)
 
-        status.toggle(.CARRY, to: registerA & value == 0)
+        status.toggle(.ZERO, to: registerA & value == 0)
 
         let flags = CPUFlags(rawValue: value)
         status.toggle(.NEGATIV, to: flags.contains(.NEGATIV))
@@ -659,9 +659,11 @@ extension CPU {
 
          status.toggle(.CARRY, to: carry)
 
-        let result = UInt8(sum)
+        let result = UInt8(truncatingIfNeeded: sum)
 
         status.toggle(.OVERFLOW, to: (value ^ result) & (result ^ registerA) & 0x80 != 0)
+
+        set_register_a(result)
     }
 
     private mutating func branch(_ condition: Bool) {

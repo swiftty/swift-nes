@@ -69,6 +69,7 @@ class CPURunner: ObservableObject {
 
                 Thread.sleep(forTimeInterval: 0.000007)
             }
+            exit(1)
         }
     }
 }
