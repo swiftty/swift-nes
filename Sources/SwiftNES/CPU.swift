@@ -372,7 +372,7 @@ extension CPU {
         let addr = operand_address(mode)
         let value = mem_read(addr)
 
-        add_to_register_a(~value &- 1)
+        add_to_register_a(~value)
     }
 
     mutating func and(_ mode: AddressingMode) {
