@@ -46,7 +46,7 @@ public struct CPU {
     var stackPointer: UInt8
     var programCounter: UInt16
 
-    var memory: [UInt8]
+    var bus: Bus
 
     public init() {
         registerA = 0
@@ -55,7 +55,7 @@ public struct CPU {
         status = CPUFlags(rawValue: 0b100100)
         stackPointer = STACK_RESET
         programCounter = 0
-        memory = .init(repeating: 0, count: 0xFFFF)
+        bus = .init()
     }
 
     public mutating func start(program: [UInt8]) {
@@ -74,7 +74,9 @@ public struct CPU {
     }
 
     public mutating func load(program: [UInt8]) {
-        memory.replaceSubrange(0x0600..<(0x0600 + program.count), with: program)
+        for i in 0..<program.count {
+            bus.mem_write(program[i], at: UInt16(0x0600 + i))
+        }
         mem_write_16(0x0600, at: 0xFFFC)
     }
 
@@ -310,26 +312,13 @@ public struct CPU {
     }
 }
 
-extension CPU {
+extension CPU: Mem {
     public func mem_read(_ addr: UInt16) -> UInt8 {
-        memory[Int(addr)]
-    }
-
-    public func mem_read_16(_ addr: UInt16) -> UInt16 {
-        let lo = UInt16(mem_read(addr))
-        let hi = UInt16(mem_read(addr + 1))
-        return (hi << 8) | lo
+        bus.mem_read(addr)
     }
 
     public mutating func mem_write(_ value: UInt8, at addr: UInt16) {
-        memory[Int(addr)] = value
-    }
-
-    public mutating func mem_write_16(_ value: UInt16, at addr: UInt16) {
-        let hi = UInt8(value >> 8)
-        let lo = UInt8(value & 0xFF)
-        mem_write(lo, at: addr)
-        mem_write(hi, at: addr + 1)
+        bus.mem_write(value, at: addr)
     }
 }
 
