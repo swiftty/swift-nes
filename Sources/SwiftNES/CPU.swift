@@ -48,14 +48,14 @@ public struct CPU {
 
     var bus: Bus
 
-    public init() {
+    public init(bus newBus: Bus) {
         registerA = 0
         registerX = 0
         registerY = 0
         status = CPUFlags(rawValue: 0b100100)
         stackPointer = STACK_RESET
         programCounter = 0
-        bus = .init()
+        bus = newBus
     }
 
     public mutating func start(program: [UInt8]) {
