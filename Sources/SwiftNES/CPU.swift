@@ -313,7 +313,7 @@ public struct CPU {
 }
 
 extension CPU: Mem {
-    public func mem_read(_ addr: UInt16) -> UInt8 {
+    public mutating func mem_read(_ addr: UInt16) -> UInt8 {
         bus.mem_read(addr)
     }
 

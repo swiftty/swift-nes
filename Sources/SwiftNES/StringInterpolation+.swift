@@ -1,6 +1,6 @@
 import Foundation
 
-public func trace(_ cpu: CPU) -> String {
+public func trace(_ cpu: inout CPU) -> String {
     let code = cpu.mem_read(cpu.programCounter)
     let ops = CPU.OpCode.codes[code]!
 

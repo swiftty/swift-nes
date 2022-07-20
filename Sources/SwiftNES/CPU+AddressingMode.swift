@@ -16,7 +16,7 @@ extension CPU {
 }
 
 extension CPU {
-    func absolute_address(_ mode: AddressingMode, _ addr: UInt16) -> UInt16 {
+    mutating func absolute_address(_ mode: AddressingMode, _ addr: UInt16) -> UInt16 {
         switch mode {
         case .zeroPage:
             return UInt16(mem_read(addr))
@@ -64,7 +64,7 @@ extension CPU {
 
     }
 
-    func operand_address(_ mode: AddressingMode) -> UInt16 {
+    mutating func operand_address(_ mode: AddressingMode) -> UInt16 {
         if mode == .immediate {
             return programCounter
         } else {
