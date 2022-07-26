@@ -1,32 +1,32 @@
 import Foundation
 
-//  _______________ $10000  _______________
-// | PRG-ROM       |       |               |
-// | Upper Bank    |       |               |
-// |_ _ _ _ _ _ _ _| $C000 | PRG-ROM       |
-// | PRG-ROM       |       |               |
-// | Lower Bank    |       |               |
-// |_______________| $8000 |_______________|
-// | SRAM          |       | SRAM          |
-// |_______________| $6000 |_______________|
-// | Expansion ROM |       | Expansion ROM |
-// |_______________| $4020 |_______________|
-// | I/O Registers |       |               |
-// |_ _ _ _ _ _ _ _| $4000 |               |
-// | Mirrors       |       | I/O Registers |
-// | $2000-$2007   |       |               |
-// |_ _ _ _ _ _ _ _| $2008 |               |
-// | I/O Registers |       |               |
-// |_______________| $2000 |_______________|
-// | Mirrors       |       |               |
-// | $0000-$07FF   |       |               |
-// |_ _ _ _ _ _ _ _| $0800 |               |
-// | RAM           |       | RAM           |
-// |_ _ _ _ _ _ _ _| $0200 |               |
-// | Stack         |       |               |
-// |_ _ _ _ _ _ _ _| $0100 |               |
-// | Zero Page     |       |               |
-// |_______________| $0000 |_______________|
+// ┏━━━━━━━━━━━━━━━┓ $10000 ┏━━━━━━━━━━━━━━━┓
+// ┃ PRG-ROM       ┃        ┃               ┃
+// ┃ Upper Bank    ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $C000  ┃ PRG-ROM       ┃
+// ┃ PRG-ROM       ┃        ┃               ┃
+// ┃ Lower Bank    ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $8000  ┣━━━━━━━━━━━━━━━┫
+// ┃ SRAM          ┃        ┃ SRAM          ┃
+// ┣━━━━━━━━━━━━━━━┫ $6000  ┣━━━━━━━━━━━━━━━┫
+// ┃ Expansion ROM ┃        ┃ Expansion ROM ┃
+// ┣━━━━━━━━━━━━━━━┫ $4020  ┣━━━━━━━━━━━━━━━┫
+// ┃ I/O Registers ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $4000  ┃               ┃
+// ┃ Mirrors       ┃        ┃ I/O Registers ┃
+// ┃ $2000-$2007   ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $2008  ┃               ┃
+// ┃ I/O Registers ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $2000  ┣━━━━━━━━━━━━━━━┫
+// ┃ Mirrors       ┃        ┃               ┃
+// ┃ $0000-$07FF   ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $0800  ┃               ┃
+// ┃ RAM           ┃        ┃ RAM           ┃
+// ┣━━━━━━━━━━━━━━━┫ $0200  ┃               ┃
+// ┃ Stack         ┃        ┃               ┃
+// ┣━━━━━━━━━━━━━━━┫ $0100  ┃               ┃
+// ┃ Zero Page     ┃        ┃               ┃
+// ┗━━━━━━━━━━━━━━━┛ $0000  ┗━━━━━━━━━━━━━━━┛
 private let RAM = 0x0000 as UInt16
 private let RAM_MIRRORS_END = 0x1fff as UInt16
 private let PPU_REGISTERS = 0x2000 as UInt16
@@ -59,10 +59,22 @@ public struct Bus {
     private var rom: Rom
     private var ppu: PPU
 
+    private var cycles: Int
+
     public init(rom newRom: Rom) {
         vram = .init(repeating: 0, count: 2048)
         rom = newRom
         ppu = .init(rom: rom.chr, mirroring: rom.mirroring)
+        cycles = 0
+    }
+
+    mutating func tick(_ step: UInt8) {
+        cycles += Int(step)
+        ppu.tick(step)
+    }
+
+    func poll_nmi_status() -> UInt8? {
+        ppu.nmi_interrupt
     }
 }
 
@@ -75,6 +87,12 @@ extension Bus: Mem {
 
         case 0x2000, 0x2001, 0x2003, 0x2005, 0x2006, 0x4014:
             fatalError("attempt to read from write-only PPU address \(hex: addr)")
+
+        case 0x2002:
+            return ppu.read_status()
+
+        case 0x2004:
+            return ppu.read_oam_data()
 
         case 0x2007:
             return ppu.read()
@@ -104,8 +122,23 @@ extension Bus: Mem {
         case 0x2000:
             ppu.write(to_ctrl: value)
 
+        case 0x2001:
+            ppu.write(to_mask: value)
+
+        case 0x2002:
+            fatalError()
+
+        case 0x2003:
+            ppu.write(to_oam_addr: value)
+
+        case 0x2004:
+            ppu.write(to_oam_data: value)
+
         case 0x2006:
             ppu.write(to_ppu_addr: value)
+
+        case 0x2007:
+            ppu.write(value)
 
         case 0x2008...PPU_REGISTERS_MIRRORS_END:
             let addr = addr & 0b0010_0000_0000_0111

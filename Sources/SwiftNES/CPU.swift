@@ -3,14 +3,12 @@ import Foundation
 private let STACK: UInt16 = 0x0100
 private let STACK_RESET: UInt8 = 0xfd
 
-private extension OptionSet {
-    mutating func toggle(_ value: Element, to flag: Bool) {
-        if flag {
-            insert(value)
-        } else {
-            remove(value)
-        }
-    }
+struct Interrupt {
+    var vector_addr: UInt16
+    var mask: UInt8
+    var cycles: UInt8
+
+    static let NMI = Interrupt(vector_addr: 0xffa, mask: 0b0001_0000, cycles: 2)
 }
 
 public struct CPU {
@@ -88,6 +86,12 @@ public struct CPU {
         let opcodes = OpCode.codes
 
         while true {
+            if bus.poll_nmi_status() != nil {
+                interrupt(.NMI)
+            }
+
+            callback(&self)
+
             let code = mem_read(programCounter)
             programCounter += 1
 
@@ -306,8 +310,6 @@ public struct CPU {
             if currentState == programCounter {
                 programCounter += opcode.count - 1
             }
-
-            callback(&self)
         }
     }
 }
@@ -346,6 +348,21 @@ extension CPU {
         let lo = UInt8(value & 0xff)
         stack_push(hi)
         stack_push(lo)
+    }
+}
+
+extension CPU {
+    mutating func interrupt(_ interrupt: Interrupt) {
+        stack_push_16(programCounter)
+        var flag = status
+        flag.toggle(.BREAK, to: interrupt.mask & 0b0000_1000 == 1)
+        flag.toggle(.BREAK2, to: interrupt.mask & 0b0100_0000 == 1)
+
+        stack_push(flag.rawValue)
+        status.insert(.INTERRUPT_DISABLE)
+
+        bus.tick(interrupt.cycles)
+        programCounter = mem_read_16(interrupt.vector_addr)
     }
 }
 
